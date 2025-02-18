@@ -1,0 +1,108 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+
+# Generate synthetic dataset
+def generate_synthetic_data():
+    data = {
+        'Age': np.random.randint(30, 80, size=100),
+        'Gender': np.random.choice(['Male', 'Female'], size=100),
+        'Smoking': np.random.choice(['Yes', 'No'], size=100),
+        'Yellow_Fingers': np.random.choice(['Yes', 'No'], size=100),
+        'Anxiety': np.random.choice(['Yes', 'No'], size=100),
+        'Peer_Pressure': np.random.choice(['Yes', 'No'], size=100),
+        'Chronic_Disease': np.random.choice(['Yes', 'No'], size=100),
+        'Fatigue': np.random.choice(['Yes', 'No'], size=100),
+        'Allergy': np.random.choice(['Yes', 'No'], size=100),
+        'Dust_Allergy': np.random.choice(['Yes', 'No'], size=100),
+        'Occupational_Hazard': np.random.choice(['Yes', 'No'], size=100),
+        'Family_History': np.random.choice(['Yes', 'No'], size=100),
+        'Chest_Pain': np.random.choice(['Yes', 'No'], size=100),
+        'Cough': np.random.choice(['Yes', 'No'], size=100),
+        'Target': np.random.choice([0, 1], size=100)  # 0 = No Cancer, 1 = Cancer
+    }
+
+    df = pd.DataFrame(data)
+
+    # Save the dataset to a CSV file
+    df.to_csv('lung_cancer_synthetic.csv', index=False)
+    print("Synthetic dataset generated and saved as 'lung_cancer_synthetic.csv'")
+
+    return df
+
+
+# Load the dataset (or generate it if not already created)
+def load_or_generate_data():
+    try:
+        # Try loading the dataset
+        data = pd.read_csv('lung_cancer_synthetic.csv')
+    except FileNotFoundError:
+        # If the dataset doesn't exist, generate a synthetic one
+        data = generate_synthetic_data()
+
+    return data
+
+
+# Data Preprocessing and Training the Model
+def train_and_evaluate_model(data):
+    # Inspect the dataset
+    print("Dataset preview:")
+    print(data.head())
+
+    # Data Preprocessing
+    # Convert categorical columns to numerical values using get_dummies (One-Hot Encoding)
+    data = pd.get_dummies(data, drop_first=True)
+
+    # Features (X) and target (y)
+    X = data.drop('Target', axis=1)
+    y = data['Target']
+
+    # Split the dataset into training and testing sets (80% training, 20% testing)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Standardize the features
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Initialize the RandomForestClassifier model
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+    # Train the model
+    model.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = model.predict(X_test)
+
+    # Evaluate the model performance
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_pred))
+
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    print("\nConfusion Matrix:")
+    print(cm)
+
+    # Visualization of Confusion Matrix using Seaborn Heatmap
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['No Cancer', 'Cancer'],
+                yticklabels=['No Cancer', 'Cancer'])
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.show()
+
+
+# Main Function to run the code
+if __name__ == "__main__":
+    # Load the data (or generate if missing)
+    data = load_or_generate_data()
+
+    # Train the model and evaluate
+    train_and_evaluate_model(data)
